@@ -1,0 +1,16 @@
+[project]
+authors = ["Chris Hennes <chennes@freecad.org>"]
+channels = ["freecad/label/dev", "conda-forge"]
+description = "Automatically create Open Know-How metadata sidecar files alongside your FreeCAD FCStd files"
+name = "freecad.OpenKnowHowMetadata"
+platforms = ["osx-arm64", "linux-aarch64", "linux-64", "win-64", "osx-64"]
+version = "1.0.0"
+
+[pypi-dependencies]
+freecad-OpenKnowHowMetadata = { path = ".", editable = true }
+
+[tasks]
+test = "python tests/tests.py"
+
+[dependencies]
+freecad = ">=1.0.0,<2"

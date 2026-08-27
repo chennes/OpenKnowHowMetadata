@@ -1,0 +1,43 @@
+# References:
+# https://packaging.python.org/en/latest/specifications/declaring-project-metadata/
+# https://packaging.python.org/en/latest/guides/packaging-namespace-packages/#native-namespace-packages
+# https://packaging.python.org/en/latest/guides/single-sourcing-package-version/
+# https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "freecad-OpenKnowHowMetadata"
+dynamic = ["version"]
+description = "Automatically create Open Know-How metadata sidecar files alongside your FreeCAD FCStd files"
+readme = "README.md"
+license = "CC0"
+license-files = [
+    "LICENSE-Code",
+    "LICENSE-Assets"
+]
+maintainers = [
+    {name = "Chris Hennes", email = "chennes@freecad.org"},
+]
+requires-python = ">=3.10"
+
+
+[dependency-groups]
+dev = [
+    "PySide6",
+    "ruff",
+    "codespell",
+    "freecad-stubs",
+]
+
+[project.urls]
+source = "https://github.com/chennes/OpenKnowHowMetadata"
+
+[tool.hatch.version]
+path = "freecad/OpenKnowHowMetadata/version.py"
+# Hatchling looks for __version__ = "..." by default
+
+[tool.hatch.build.targets.wheel]
+packages = ["freecad"]
