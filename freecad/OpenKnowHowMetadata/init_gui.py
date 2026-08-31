@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: CC0
+# SPDX-License-Identifier: CC0-1.0
 
 """
 GUI entry point for the addon.
@@ -14,21 +14,16 @@ FreeCAD loading sequence:
 Keep this file fast - it runs on every FreeCAD GUI startup.
 """
 
-from .resources import Resources
-from .commands import ExampleCommand, WorkbenchManipulator
-from .example_workbench import Open Know-How MetadataWorkbench
+from PySide import QtWidgets
+import FreeCAD as App
+import FreeCADGui as Gui
 
-# Install icons (optional)
-Resources.gui_register_icons()
+class SaveObserver:
+    def slotFinishSaveDocument(self, doc, path):
+        if path != doc.FileName:
+            return
 
-# Install translations (if any)
-Resources.gui_register_translations()
 
-# Install commands
-ExampleCommand.Install()
 
-# Add Commands to the Gui
-WorkbenchManipulator.install()
+App.addDocumentObserver(SaveObserver())
 
-# Example workbench
-Open Know-How MetadataWorkbench.Install()

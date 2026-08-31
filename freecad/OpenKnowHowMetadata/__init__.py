@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: CC0
+# SPDX-License-Identifier: CC0-1.0
 
 """
 Entry point for the addon (headless mode).

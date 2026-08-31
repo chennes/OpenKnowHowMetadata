@@ -10,7 +10,47 @@ version = "1.0.0"
 freecad-OpenKnowHowMetadata = { path = ".", editable = true }
 
 [tasks]
-test = "python tests/tests.py"
+test = "python tests/test_schema.py"
 
 [dependencies]
 freecad = ">=1.0.0,<2"
+# Runtime dependencies of the addon. Mirrored in package.xml, which is what the
+# Addon Manager reads, and in pyproject.toml for a plain pip install.
+pyyaml = ">=6.0,<7"
+tomlkit = ">=0.13,<2"
+jsonschema = ">=4.0,<5"
+# Test-only.
+pytest = ">=8.0,<9"
+
+# ---------------------------------------------------------------------------
+# The "core" environment deliberately has no FreeCAD in it.
+#
+# The conda freecad package ships its own freecad/__init__.py that imports
+# FreeCAD unconditionally, and it hijacks this repository's native namespace
+# directory. So inside the default environment, importing anything under
+# freecad.OpenKnowHowMetadata brings in FreeCAD no matter how clean the module
+# is.
+#
+# This environment has no such shim, so an accidental "import FreeCAD" in okh/
+# fails here. Python is pinned to the declared minimum so the same run also
+# proves the core works on the floor in package.xml and pyproject.toml.
+#
+#   pixi run test           default environment, FreeCAD present
+#   pixi run test-core      bare environment, FreeCAD absent, Python 3.10
+# ---------------------------------------------------------------------------
+
+[feature.core.dependencies]
+python = "3.10.*"
+pyyaml = ">=6.0,<7"
+tomlkit = ">=0.13,<2"
+jsonschema = ">=4.0,<5"
+pytest = ">=8.0,<9"
+
+[feature.core.pypi-dependencies]
+freecad-OpenKnowHowMetadata = { path = ".", editable = true }
+
+[feature.core.tasks]
+test-core = "python tests/test_schema.py"
+
+[environments]
+core = { features = ["core"], no-default-feature = true }

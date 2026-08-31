@@ -1,20 +1,22 @@
-<!-- SPDX-License-Identifier: CC0 -->
+<!-- SPDX-License-Identifier: CC0-1.0 -->
 
 # Open Know-How Metadata
 
-Automatically create Open Know-How metadata sidecar files alongside your FreeCAD FCStd files
+Automatically create [Open Know-How](https://www.internetofproduction.org/openknowhow) metadata sidecar files alongside
+your FreeCAD `*.FCStd` files.
 
-## What
+# What is Open Know-How?
 
-This is the file configured in the `package.xml`
-manifest to be shown in the addon manager
-instead of the repository README.
+From the [Internet of Production](https://www.internetofproduction.org)'s site:
 
-## Why
+    Open Know-How is an open data model for sharing hardware designs and documentation online, to know how something can be made.
 
-Most of the information of the repository README
-isn't relevant to the users of your addon, they are
-for the most part 2 separate audiences.
+The upshot is that you can store information about the actual production of your open hardware design in a
+sidecar file that can be read in by various bits of tooling designed to help people actually *make* the design.
+For example, [Open Hardware Manager](https://www.openhardwaremanager.org/) can help you match open hardware designs to
+manufacturing facilities and explore the resulting supply chains.
 
-Both should be served adequately and not
-overloaded with information they don't need.
+# Included Metadata
+
+The Open Know-How [standard](https://github.com/iop-alliance/OpenKnowHow#standard) defines many pieces
+of metadata that you can include in your model: this addon aims to support all of them.

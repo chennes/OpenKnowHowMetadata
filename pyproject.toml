@@ -13,7 +13,7 @@ name = "freecad-OpenKnowHowMetadata"
 dynamic = ["version"]
 description = "Automatically create Open Know-How metadata sidecar files alongside your FreeCAD FCStd files"
 readme = "README.md"
-license = "CC0"
+license = "CC0-1.0"
 license-files = [
     "LICENSE-Code",
     "LICENSE-Assets"
@@ -22,6 +22,13 @@ maintainers = [
     {name = "Chris Hennes", email = "chennes@freecad.org"},
 ]
 requires-python = ">=3.10"
+# tomlkit rather than tomllib: tomllib reads but cannot write, and it would push
+# the floor to 3.11. See IMPLEMENTATION_NOTES.md.
+dependencies = [
+    "pyyaml",
+    "tomlkit",
+    "jsonschema",
+]
 
 
 [dependency-groups]
@@ -30,6 +37,7 @@ dev = [
     "ruff",
     "codespell",
     "freecad-stubs",
+    "pytest",
 ]
 
 [project.urls]

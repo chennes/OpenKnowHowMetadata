@@ -13,25 +13,17 @@
 
     <!--[ Ecosystem Requirements ]-->
 
-    <!--NOTE: Examples only, this Template does *not* actually require these versions -->
-    <freecadmin>1.1.1</freecadmin>
+    <freecadmin>1.0</freecadmin>
     <pythonmin>3.10</pythonmin>
 
     <!--[ Dependencies ]-->
 
-    <!--NOTE: Examples only, this Template does *not* actually require these -->
-    <!--
-    <depend type="python">numpy</depend>
-    <depend type="addon">Curves</depend>
-    <depend type="internal">draft</depend>
-    -->
+    <depend type="python">pyyaml</depend>
+    <depend type="python">tomlkit</depend>
+    <depend type="python">jsonschema</depend>
 
-    <!--[ Tags ]-->
-    <!--
-    <tag>Template</tag>
-    <tag>Minimal</tag>
-    <tag>Example</tag>
-    -->
+    <tag>open hardware</tag>
+    <tag>metadata</tag>
 
     <!--[ Maintainers ]-->
 
@@ -40,16 +32,15 @@
     <!--[ Authors ]-->
 
     <author>Chris Hennes</author>
-    <!-- <author>Yet another author's name here</author> -->
 
     <!--[ Licenses ]-->
 
-    <license file="LICENSE-Code">CC0</license>
-    <license file="LICENSE-Assets">CC0</license>
+    <license file="LICENSE-Code">CC0-1.0</license>
+    <license file="LICENSE-Assets">CC0-1.0</license>
 
     <!--[ Icon ]-->
 
-    <icon>freecad/OpenKnowHowMetadata/resources/icons/OpenKnowHowMetadata.svg</icon>
+    <icon>freecad/OpenKnowHowMetadata/resources/icons/icon_fixed.svg</icon>
 
     <!--[ Urls ]-->
 
@@ -62,16 +53,6 @@
 
     <content>
         <other/>
-
-        <!-- Example stuff -->
-        <workbench>
-            <name>Open Know-How Metadata</name>
-            <classname>Open Know-How MetadataWorkbench</classname>
-            <description>Example workbench</description>
-            <subdirectory>./</subdirectory>
-            <icon>freecad/OpenKnowHowMetadata/resources/icons/OpenKnowHowMetadata-wb.svg</icon>
-        </workbench>
-
     </content>
 
 </package>

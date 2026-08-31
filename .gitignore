@@ -33,3 +33,11 @@ ENV/
 
 # other caches
 .ruff_cache/
+
+# pixi resolves the dev environment on demand; the lock file is not shipped
+pixi.lock
+
+.idea
+
+# macOS
+.DS_Store

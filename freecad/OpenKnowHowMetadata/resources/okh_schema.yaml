@@ -1,0 +1,990 @@
+# SPDX-License-Identifier: CC0-1.0
+#
+# Machine-readable description of the Open Know-How manifest, okhv 2.4.
+#
+# Source of truth: https://github.com/iop-alliance/OpenKnowHow
+#   src/schema/okh.schema.json   the normative JSON Schema
+#   src/spec/okh.ttl             the RDF ontology
+#   src/spec/otrl.ttl            the OTRL and ODRL readiness vocabularies
+#   res/sample_data/okh-TEMPLATE.toml
+#
+# Field names, types, cardinalities, and vocabulary values are taken from those
+# sources. Labels and help text are written for this dialog and aimed at the
+# person filling it in, rather than at a developer reading a specification. They
+# are not copied from upstream, which matters for more than tone: the schema is
+# AGPL-3.0-or-later and the OTRL ontology is GPL-3.0-or-later, while this addon
+# is CC0. See IMPLEMENTATION_NOTES.md.
+#
+# This file drives the dynamic metadata editor. The dialog is built by walking
+# "groups" in order, and the manifest is written by walking the same structure.
+#
+# ---------------------------------------------------------------------------
+# Reading this file
+# ---------------------------------------------------------------------------
+#
+# obligation  What the standard requires.
+#               required     listed in the schema's top-level "required" array,
+#                            or in a nested object's own "required" array
+#               conditional  required only when a stated condition holds
+#               recommended  not required, but a manifest without it is not as
+#                            strong as it should be
+#               optional     defined, no obligation
+#
+# tier        How prominent the field is in the editor. A judgment made by this
+#             addon, not part of the standard. Change it freely to adjust the UX
+#               generated  written by the addon; not presented for editing at all
+#               core       always visible, group expanded
+#               standard   visible, group collapsed by default
+#               advanced   hidden behind the "Advanced" disclosure
+#
+# type        Semantic type. Not *necessarily* directly mapped to a specific Qt widget, with the
+#             idea that the widget could change (even the whole toolkit could change), so this is
+#             intended to be broader than a single widget type.
+#               text            single line
+#               paragraph       multiple lines
+#               number          decimal, see "unit" and "minimum"
+#               url             absolute http(s) URL
+#               rel_path_or_url path relative to the manifest, or absolute URL
+#               language        BCP 47 tag, e.g. "en" or "en-GB"
+#               spdx_expression SPDX license expression, not just an ID
+#               email           email address
+#               doi_or_url      DOI or absolute URL
+#               cpc_class       Cooperative Patent Classification identifier
+#               enum            one value from the named vocabulary
+#               agent           a person or organization, see "forms"
+#               object          has children
+#
+# emit        How the writer serializes the field into TOML.
+#               scalar           key = value
+#               scalar_or_array  key = value, or key = [a, b] when more than one
+#               table            [key]
+#               array_of_tables  [[key]]
+#             Required on a top-level field. A child that omits it is a scalar
+#             inside its parent's table.
+#
+# vocabulary  Names an entry under "vocabularies". Closed unless the entry sets
+#             open: true, in which case values outside the list are legal.
+#
+# forms       For polymorphic fields, the shapes the standard accepts.
+#             canonical_form names the one this addon writes.
+#
+# condition   Gates the field. "constraint:<id>" refers to "constraints" below;
+#             "parent_present" means required only when the parent is written;
+#             "tsdc_contains:<code>" mirrors the schema's conditional rules.
+#
+# computed_from   A value the addon derives from the FreeCAD document.
+# default_from    A starting value the user may overwrite.
+#
+# The 32 canonical top-level fields come from the schema's "properties". Four
+# more (material, printing-process, component-sides, 2d-size-mm) exist only
+# inside its conditional "allOf" rules and are marked with a condition here.
+#
+# Rules that hold for the whole manifest, such as how file references resolve,
+# have no field to sit on and are not settings. They are written up in
+# IMPLEMENTATION_NOTES.md at the root of this repository.
+#
+# CAUTION: child lists are shared through YAML anchors. After loading, those
+# nodes are the same object in memory. Treat the loaded schema as read only, or
+# deep copy before mutating.
+
+schema_version: 2
+
+spec:
+  name: Open Know-How
+  okhv: "2.4"
+  url: https://github.com/iop-alliance/OpenKnowHow
+  schema_url: https://w3id.org/oseg/schema/okh.schema.json
+  publisher: Internet of Production Alliance
+  # The manifest is TOML (not YAML, like the original standard). Any filename containing "okh" is legal;
+  # okh.toml is preferred.
+  format: toml
+  filename: okh.toml
+  encoding: utf-8
+
+# Re-usable rules that don't apply to a specific element
+constraints:
+  - id: part_source_or_export
+    type: at_least_one_of_children
+    field: part
+    children: [source, export]
+    message: >-
+      A part needs at least one file: the editable original, or something
+      exported from it. A part with neither names nothing at all.
+
+  - id: dimensions_complete
+    type: all_or_none_children
+    field: outer-dimensions
+    children: [width, depth, height]
+    message: >-
+      Outer dimensions need all three of width, depth, and height. Give a rough
+      estimate or leave the whole section out.
+
+# Controlled vocabularies. "open" entries accept values outside the list.
+vocabularies:
+
+  otrl:
+    open: false
+    label: Technology readiness
+    source: https://w3id.org/oseg/ont/otrl
+    values:
+      - value: OTRL-1
+        label: Ideation
+        help: >-
+          You know what you want to build and roughly what it has to do, but
+          nothing has been modelled yet. Your FCStd file is empty(-ish).
+      - value: OTRL-2
+        label: Conception
+        help: >-
+          You have settled on how it will work. The approach is decided even
+          though the detail is not drawn. You've got a Sketch or two.
+      - value: OTRL-3
+        label: Development
+        help: >-
+          The model exists and you are actively working on it. Nothing has been
+          built from it yet.
+      - value: OTRL-4
+        label: Prototyping and testing
+        help: >-
+          At least one has been built from these files and tried out, and it
+          does what it is supposed to.
+      - value: OTRL-5
+        label: Manufacturing development
+        help: >-
+          You know how to make it more than once. The processes are worked out
+          and you understand where they hold and where they do not.
+      - value: OTRL-6
+        label: Product qualification
+        help: >-
+          An outside body has assessed it and said so formally, by certificate
+          or an equivalent.
+
+  odrl:
+    open: false
+    label: Documentation readiness
+    source: https://w3id.org/oseg/ont/otrl
+    values:
+      - value: ODRL-1
+        label: Documentation started
+        help: >-
+          Something is published (under a free and open license). Nothing
+          says it is complete, or even that anyone else can edit it.
+      - value: ODRL-2
+        label: Collaborative documentation in progress
+        help: >-
+          The files are published in formats other people can actually open and
+          change, so contributions from outside the project are possible.
+      - value: ODRL-3
+        label: Full documentation published
+        help: >-
+          Everything DIN SPEC 3105-1 asks for is there, and the project has
+          reached a stable release.
+      - value: "ODRL-3*"
+        label: Full documentation published and audited
+        help: >-
+          Someone outside the project has checked the documentation and
+          published the result, through DIN SPEC 3105-2, an OSHWA or RYF
+          certification, or a peer-reviewed paper.
+      - value: ODRL-4
+        label: Full documentation for product qualification
+        help: >-
+          The documentation carries what a manufacturer needs to qualify the
+          product and sell it independently.
+
+  tsdc:
+    open: true
+    label: Technology-specific documentation criteria
+    source: https://w3id.org/oseg/ont/tsdc/core
+    source_version: "0.2"
+    help: >-
+      What this design is made of and how it is made. Each code brings its own
+      documentation requirements under DIN SPEC 3105-1. Pick every one that
+      applies; most projects need more than one.
+    # The ontology groups its classes with tsdc:isBelow. Use these to section a
+    # long picker; they are not values in their own right.
+    categories:
+      - {id: component, label: What it is made of}
+      - {id: manufacturing, label: How it is made}
+      - {id: post_processing, label: How it is finished}
+    values:
+      - value: PRT
+        category: component
+        label: Part
+        help: A single piece you drew yourself for this project.
+      - value: ASM
+        category: component
+        label: Assembly
+        help: >-
+          Several pieces fitted together, which may mix parts you drew with
+          purchased and standard ones.
+      - value: STD
+        category: component
+        label: Standard component
+        help: >-
+          An off-the-shelf item covered by a published standard, such as a
+          screw, nut, or bearing.
+      - value: BUY
+        category: component
+        label: Proprietary component
+        help: >-
+          A purchased piece whose own design is closed, such as a
+          microcontroller or a motor.
+      - value: OSH
+        category: component
+        label: Open source hardware
+        help: >-
+          A part or assembly that someone else already published under an open
+          license, reused here.
+      - value: 3DP
+        category: manufacturing
+        label: 3D printing
+        help: Built up additively, layer by layer.
+      - value: CNC
+        category: manufacturing
+        label: Machining
+        help: >-
+          Cut away from solid stock, whether or not the machine is computer
+          controlled.
+      - value: LAS
+        category: manufacturing
+        label: Laser cutting
+        help: Cut from sheet material with a laser.
+      - value: MEC
+        category: manufacturing
+        label: Mechanical assembly
+        help: >-
+          Put together with fasteners/press-fits/etc. rather than by joining the
+          material itself.
+      - value: WEL
+        category: manufacturing
+        label: Welding
+        help: Joined by melting the material at the join.
+      - value: PCB
+        category: manufacturing
+        label: Printed circuit board
+        help: A board fabricated from your layout files.
+      - value: CIR
+        category: manufacturing
+        label: Electronic circuitry
+        help: >-
+          Electronics that are not a printed board, such as wiring harnesses
+          or point-to-point work.
+      - value: COT
+        category: post_processing
+        label: Coating
+        help: Surface finishing such as paint, plating, or anodizing.
+      - value: CMP
+        category: post_processing
+        label: Changed material properties
+        help: "Heat treatment and the like: annealing, hardening, tempering."
+
+  printing_process:
+    open: false
+    label: Printing process
+    values:
+      - {value: FDM, label: Fused deposition modeling}
+      - {value: SLA, label: Stereolithography}
+      - {value: SLS, label: Selective laser sintering}
+      - {value: MJF, label: Multi jet fusion}
+      - {value: DMLS, label: Direct metal laser sintering}
+
+  image_slots:
+    open: true
+    label: Image slot
+    custom_pattern: "^c_[0-9a-z._-]+$"
+    help: >-
+      The role an image plays for its project. Each slot can be filled at most
+      once. Custom slots must start with "c_".
+    values:
+      - {value: icon-main, label: Main icon}
+      - {value: icon-main-bw, label: "Main icon, black and white"}
+      - {value: logo, label: Logo}
+      - {value: logo-bw, label: "Logo, black and white"}
+      - {value: model-3d, label: 3D model}
+      - {value: model-main, label: Main model view}
+      - {value: model-from-front, label: Model from the front}
+      - {value: model-from-back, label: Model from the back}
+      - {value: model-from-left, label: Model from the left}
+      - {value: model-from-right, label: Model from the right}
+      - {value: model-from-above, label: Model from above}
+      - {value: model-from-below, label: Model from below}
+      - {value: photo-thing-main, label: Main photograph}
+      - {value: photo-packaging, label: Packaging photograph}
+      - {value: organization-logo, label: Organization logo}
+      - {value: organization-logo-bw, label: "Organization logo, black and white"}
+      - {value: social, label: Social media image}
+      - {value: symbol, label: Symbol}
+
+  image_tags:
+    open: true
+    label: Image tag
+    custom_pattern: "^c_[0-9a-z._-]+$"
+    help: >-
+      Descriptive tags for an image. Unlike slots, a tag may be used by more
+      than one image. Custom tags must start with "c_".
+    values:
+      - {value: art, label: Art}
+      - {value: assembly, label: Assembly}
+      - {value: bw, label: Black and white}
+      - {value: color, label: Color}
+      - {value: diagram, label: Diagram}
+      - {value: drawing, label: Drawing}
+      - {value: gray, label: Grayscale}
+      - {value: icon, label: Icon}
+      - {value: logo, label: Logo}
+      - {value: model, label: Model}
+      - {value: photo, label: Photograph}
+      - {value: screenshot, label: Screenshot}
+
+# Reusable child structures.
+fragments:
+
+  dimensions: &dimensions
+    - key: width
+      type: number
+      obligation: required
+      condition: parent_present
+      unit: mm
+      minimum_exclusive: 0
+      label: Width
+    - key: depth
+      type: number
+      obligation: required
+      condition: parent_present
+      unit: mm
+      minimum_exclusive: 0
+      label: Depth
+    - key: height
+      type: number
+      obligation: required
+      condition: parent_present
+      unit: mm
+      minimum_exclusive: 0
+      label: Height
+
+  image_entry: &image_entry
+    - key: location
+      type: rel_path_or_url
+      obligation: required
+      condition: parent_present
+      emit: scalar
+      label: File
+      help: The image file, relative to the manifest, or an absolute URL.
+    - key: depicts
+      type: paragraph
+      obligation: recommended
+      emit: scalar
+      label: Description
+      help: >-
+        What can be seen in the image. Used as caption and alt text, so write it
+        for someone who cannot see the picture.
+    - key: slots
+      type: enum
+      obligation: optional
+      emit: scalar_or_array
+      multiple: true
+      vocabulary: image_slots
+      label: Slots
+    - key: tags
+      type: enum
+      obligation: optional
+      emit: scalar_or_array
+      multiple: true
+      vocabulary: image_tags
+      label: Tags
+
+groups:
+
+  # -------------------------------------------------------------------------
+  - id: manifest
+    label: Manifest
+    tier: generated
+    help: Describes the manifest itself rather than the design.
+    fields:
+
+      - key: okhv
+        obligation: required
+        type: text
+        tier: generated
+        emit: scalar
+        const: "2.4"
+        label: OKH version
+        help: >-
+          The version of the standard this manifest follows. Fixed by the addon;
+          changing it changes which fields are legal.
+
+      - key: rdf
+        obligation: optional
+        type: object
+        tier: advanced
+        emit: table
+        label: RDF namespace
+        help: >-
+          Namespace for the linked-data triples generated from this manifest.
+          Only set this if you control a permanent URL you want the data
+          published under.
+        children:
+          - key: namespace
+            type: url
+            obligation: required
+            condition: parent_present
+            emit: scalar
+            label: Namespace
+            help: An absolute http(s) IRI ending in "/" or "#".
+          - key: prefix
+            type: text
+            obligation: optional
+            emit: scalar
+            label: Prefix
+            help: Short prefix for the namespace. Usually best left unset.
+
+  # -------------------------------------------------------------------------
+  - id: identity
+    label: Identity
+    tier: core
+    help: What this thing is and what it does.
+    fields:
+
+      - key: name
+        obligation: required
+        type: text
+        tier: core
+        emit: scalar
+        label: Name
+        help: The working title of the design.
+        default_from: document.Label
+
+      - key: function
+        obligation: required
+        type: paragraph
+        tier: core
+        emit: scalar
+        label: Function
+        help: >-
+          What it does, what problem it solves, for whom, and under what
+          conditions. This is the field people search, so name the application
+          explicitly rather than describing the mechanism.
+        default_from: document.Comment
+
+      - key: version
+        obligation: recommended
+        type: text
+        tier: core
+        emit: scalar
+        label: Version
+        help: The version of this design, preferably semantic versioning.
+
+      - key: documentation-language
+        obligation: recommended
+        type: language
+        tier: standard
+        emit: scalar_or_array
+        multiple: true
+        label: Documentation language
+        help: >-
+          BCP 47 tags for the languages the documentation is written in, such as
+          "en" or "en-GB".
+        default_from: locale
+
+  # -------------------------------------------------------------------------
+  - id: legal
+    label: Licensing
+    tier: core
+    help: Who owns this and how others may use it.
+    fields:
+
+      - key: license
+        obligation: required
+        type: spdx_expression
+        tier: core
+        emit: scalar
+        label: License
+        help: >-
+          An SPDX license expression, usually a single identifier such as
+          "CERN-OHL-S-2.0", optionally combined with AND or OR. For a license
+          that is not SPDX registered, prefix a custom string with
+          "LicenseRef-". Indexers may skip a project whose license they cannot
+          resolve.
+        computed_from: repository.license_file
+
+      - key: licensor
+        obligation: required
+        type: agent
+        tier: core
+        emit: scalar_or_array
+        multiple: true
+        forms: [name_email_string, object, list_of_either]
+        canonical_form: name_email_string
+        label: Licensor
+        help: >-
+          Whoever holds the rights to the design. Written as
+          "Jane Doe <jane@example.org>", with an optional organization in
+          parentheses before the address.
+        default_from: preference:BaseApp/Preferences/Document/prefAuthor
+        children:
+          - key: name
+            type: text
+            obligation: required
+            condition: parent_present
+            label: Name
+          - key: email
+            type: email
+            obligation: optional
+            label: Email
+          - key: url
+            type: url
+            obligation: optional
+            label: Home page
+
+      - key: organization
+        obligation: optional
+        type: agent
+        tier: advanced
+        emit: scalar_or_array
+        multiple: true
+        forms: [name_string, object, list_of_either]
+        canonical_form: name_string
+        label: Organization
+        help: >-
+          The organization behind the licensor, or one that represents some of
+          the contributors.
+        children:
+          - key: name
+            type: text
+            obligation: required
+            condition: parent_present
+            label: Name
+          - key: email
+            type: email
+            obligation: optional
+            label: Email
+          - key: url
+            type: url
+            obligation: optional
+            label: Home page
+
+  # -------------------------------------------------------------------------
+  - id: repository
+    label: Repository
+    tier: core
+    help: Where the design lives and how someone joins in.
+    fields:
+
+      - key: repo
+        obligation: required
+        type: url
+        tier: core
+        emit: scalar
+        label: Repository
+        help: >-
+          Where development happens, as a browsable page: for example, a hosted git
+          repository or a wiki. Someone following this link should be able to file an
+          issue and contact the team.
+        computed_from: repository.remote_url
+
+      - key: readme
+        obligation: recommended
+        type: rel_path_or_url
+        tier: standard
+        emit: scalar_or_array
+        multiple: true
+        label: Readme
+        help: The human-readable entry point into the sources.
+        computed_from: repository.readme_file
+
+      - key: release
+        obligation: optional
+        type: rel_path_or_url
+        tier: advanced
+        emit: scalar
+        label: Release
+        help: >-
+          The release package for this version. Where there are no releases,
+          link the latest commit, repo head, etc.
+
+      - key: contribution-guide
+        obligation: optional
+        type: rel_path_or_url
+        tier: advanced
+        emit: scalar
+        label: Contribution guide
+        help: How to contribute, covering both technical and social conventions.
+        computed_from: repository.contributing_file
+
+  # -------------------------------------------------------------------------
+  - id: files
+    label: Files
+    tier: standard
+    help: >-
+      Paths are relative to the directory holding the manifest, or absolute
+      URLs. Every entry accepts one value or a list.
+    fields:
+
+      - key: source
+        obligation: recommended
+        type: rel_path_or_url
+        tier: core
+        emit: scalar_or_array
+        multiple: true
+        label: Source files
+        help: >-
+          The editable originals, such as the FreeCAD document itself. These are
+          what make the design modifiable rather than merely visible.
+        computed_from: document.file_path
+
+      - key: export
+        obligation: recommended
+        type: rel_path_or_url
+        tier: standard
+        emit: scalar_or_array
+        multiple: true
+        label: Exports
+        help: >-
+          Files generated from the sources, such as a STEP of the assembly or a
+          PDF of a drawing. These let someone manufacture the design without
+          owning the software it was made in.
+        computed_from: document.exported_files
+
+      - key: auxiliary
+        obligation: optional
+        type: rel_path_or_url
+        tier: advanced
+        emit: scalar_or_array
+        multiple: true
+        label: Auxiliary files
+        help: >-
+          Files that are neither sources nor exports but are still needed, such
+          as library or configuration files.
+
+      - key: bom
+        obligation: recommended
+        type: rel_path_or_url
+        tier: standard
+        emit: scalar_or_array
+        multiple: true
+        label: Bill of materials
+        help: What the thing is made of. CSV is preferred.
+
+      - key: manufacturing-instructions
+        obligation: recommended
+        type: rel_path_or_url
+        tier: standard
+        emit: scalar_or_array
+        multiple: true
+        label: Manufacturing instructions
+        help: How to build it.
+
+      - key: user-manual
+        obligation: recommended
+        type: rel_path_or_url
+        tier: standard
+        emit: scalar_or_array
+        multiple: true
+        label: User manual
+        help: How to use it once it is built.
+
+  # -------------------------------------------------------------------------
+  - id: images
+    label: Images
+    tier: core
+    help: >-
+      Pictures of the design. A slot may be filled only once per project, so
+      there is one main photograph, one logo, and so on.
+    fields:
+
+      - key: image
+        obligation: recommended
+        type: object
+        tier: core
+        emit: array_of_tables
+        repeatable: true
+        forms: [path_string, object, list_of_either]
+        canonical_form: object
+        label: Images
+        computed_from: document.viewport_render
+        children: *image_entry
+
+  # -------------------------------------------------------------------------
+  - id: physical
+    label: Physical properties
+    tier: standard
+    help: >-
+      The finished thing as an object in the world. FreeCAD can measure most of
+      this from the model.
+    fields:
+
+      - key: outer-dimensions
+        obligation: recommended
+        type: object
+        tier: standard
+        emit: table
+        constraint: dimensions_complete
+        label: Outer dimensions
+        help: >-
+          The bounding box of the finished thing. A rough estimate is better
+          than nothing; leave the section out entirely if unknown.
+        computed_from: document.bound_box
+        children: *dimensions
+
+      - key: mass
+        obligation: recommended
+        type: number
+        tier: standard
+        emit: scalar
+        unit: g
+        minimum_exclusive: 0
+        label: Mass
+        help: The mass of the finished thing, in grams.
+        computed_from: document.mass
+
+      - key: tsdc
+        obligation: recommended
+        type: enum
+        tier: standard
+        emit: scalar_or_array
+        multiple: true
+        vocabulary: tsdc
+        label: Documentation criteria
+        help: >-
+          Which technologies this design uses. The choice decides what counts as
+          complete documentation under DIN SPEC 3105-1, and it unlocks further
+          fields below.
+
+      - key: material
+        obligation: optional
+        type: text
+        tier: standard
+        emit: scalar
+        condition: tsdc_contains:3DP
+        label: Material
+        help: The material the part is printed in.
+
+      - key: printing-process
+        obligation: optional
+        type: enum
+        tier: standard
+        emit: scalar
+        vocabulary: printing_process
+        condition: tsdc_contains:3DP
+        label: Printing process
+        help: The additive process used.
+
+      - key: component-sides
+        obligation: optional
+        type: number
+        tier: standard
+        emit: scalar
+        condition: tsdc_contains:PCB
+        label: Component sides
+        help: How many sides of the board carry components.
+
+      - key: 2d-size-mm
+        obligation: optional
+        type: number
+        tier: standard
+        emit: scalar_or_array
+        multiple: true
+        exactly: 2
+        unit: mm
+        condition: tsdc_contains:PCB
+        label: Board size
+        help: Width and height of the board, as two numbers in millimeters.
+
+  # -------------------------------------------------------------------------
+  - id: parts
+    label: Parts
+    tier: standard
+    help: >-
+      The individual components this design is made of, each with its own
+      documentation. A part needs a source file or an export; without either it
+      cannot be reproduced.
+    fields:
+
+      - key: part
+        obligation: optional
+        type: object
+        tier: standard
+        emit: array_of_tables
+        repeatable: true
+        constraint: part_source_or_export
+        label: Parts
+        computed_from: document.parts
+        children:
+          - key: name
+            type: text
+            obligation: required
+            condition: parent_present
+            emit: scalar
+            label: Name
+          - key: source
+            type: rel_path_or_url
+            obligation: conditional
+            condition: constraint:part_source_or_export
+            emit: scalar_or_array
+            multiple: true
+            label: Source files
+            help: >-
+              The editable original for this part, normally its FreeCAD
+              document. This is what lets someone change the design rather
+              than only copy it.
+          - key: export
+            type: rel_path_or_url
+            obligation: conditional
+            condition: constraint:part_source_or_export
+            emit: scalar_or_array
+            multiple: true
+            label: Exports
+            help: >-
+              What you exported from the original: STEP, STL, a PDF drawing.
+              These let someone make the part without owning the software it
+              was designed in.
+          - key: auxiliary
+            type: rel_path_or_url
+            obligation: optional
+            emit: scalar_or_array
+            multiple: true
+            label: Auxiliary files
+          - key: image
+            type: object
+            obligation: optional
+            emit: array_of_tables
+            repeatable: true
+            forms: [path_string, object, list_of_either]
+            canonical_form: object
+            label: Images
+            children: *image_entry
+          - key: mass
+            type: number
+            obligation: optional
+            emit: scalar
+            unit: g
+            minimum_exclusive: 0
+            label: Mass
+          - key: outer-dimensions
+            type: object
+            obligation: optional
+            emit: table
+            constraint: dimensions_complete
+            label: Outer dimensions
+            children: *dimensions
+          - key: tsdc
+            type: enum
+            obligation: optional
+            emit: scalar_or_array
+            multiple: true
+            vocabulary: tsdc
+            label: Documentation criteria
+
+  # -------------------------------------------------------------------------
+  - id: software
+    label: Software
+    tier: advanced
+    help: Software needed to operate the hardware.
+    fields:
+
+      - key: software
+        obligation: optional
+        type: object
+        tier: advanced
+        emit: array_of_tables
+        repeatable: true
+        label: Software
+        children:
+          - key: release
+            type: rel_path_or_url
+            obligation: required
+            condition: parent_present
+            emit: scalar
+            label: Release
+            help: The exact software release this version of the hardware uses.
+          - key: installation-guide
+            type: rel_path_or_url
+            obligation: optional
+            emit: scalar
+            label: Installation guide
+
+  # -------------------------------------------------------------------------
+  - id: maturity
+    label: Maturity
+    tier: standard
+    help: >-
+      How far along the design and its documentation are. These are separate
+      scales: a finished machine can have thin documentation, and vice versa.
+    fields:
+
+      - key: technology-readiness-level
+        obligation: recommended
+        type: enum
+        tier: standard
+        emit: scalar
+        vocabulary: otrl
+        default: OTRL-1
+        label: Technology readiness
+        help: How trustworthy, stable, and usable the design itself is.
+
+      - key: documentation-readiness-level
+        obligation: recommended
+        type: enum
+        tier: standard
+        emit: scalar
+        vocabulary: odrl
+        default: ODRL-1
+        label: Documentation readiness
+        help: >-
+          How complete and how well tested the documentation is, and how many
+          times the design has been reproduced from it.
+
+  # -------------------------------------------------------------------------
+  - id: provenance
+    label: Provenance and standards
+    tier: advanced
+    help: Where the design came from, and what it has been measured against.
+    fields:
+
+      - key: forkOf
+        obligation: optional
+        type: url
+        tier: advanced
+        emit: scalar
+        label: Fork of
+        help: The project this design was forked from.
+
+      - key: publication
+        obligation: optional
+        type: doi_or_url
+        tier: advanced
+        emit: scalar_or_array
+        multiple: true
+        label: Publications
+        help: Papers or articles about this design, by DOI or URL.
+
+      - key: standard-compliance
+        obligation: optional
+        type: text
+        tier: advanced
+        emit: scalar_or_array
+        multiple: true
+        label: Standards complied with
+        help: >-
+          Document numbers of standards this design meets, such as
+          "DIN EN 1335".
+
+      - key: attestation
+        obligation: optional
+        type: rel_path_or_url
+        tier: advanced
+        emit: scalar_or_array
+        multiple: true
+        label: Attestations
+        help: >-
+          Evidence from a conformity assessment body that the documentation is
+          complete and the design qualifies as open source hardware.
+
+      - key: cpc-patent-class
+        obligation: optional
+        type: cpc_class
+        tier: advanced
+        emit: scalar
+        label: Patent class
+        help: >-
+          The Cooperative Patent Classification identifier that best describes
+          this field of technology, such as "D03D 35/00".

@@ -1,0 +1,308 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   id="Layer_1"
+   version="1.1"
+   viewBox="0 0 128 128"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <!-- Generator: Adobe Illustrator 29.5.0, SVG Export Plug-In . SVG Version: 2.1.0 Build 137)  -->
+  <rect
+     class="st0"
+     x="5.1799979"
+     y="25.549158"
+     width="117.94"
+     height="74.279999"
+     rx="4.8400002"
+     ry="4.8400002"
+     id="rect1-5"
+     style="opacity:0.92009685;fill:#000000;fill-opacity:1;stroke:none;stroke-miterlimit:10;filter:url(#filter25)" />
+  <defs
+     id="defs1">
+    <linearGradient
+       id="linearGradient19">
+      <stop
+         style="stop-color:#bc8911;stop-opacity:1;"
+         offset="0"
+         id="stop20" />
+      <stop
+         style="stop-color:#6e5c30;stop-opacity:1;"
+         offset="1"
+         id="stop21" />
+    </linearGradient>
+    <linearGradient
+       id="linearGradient16">
+      <stop
+         style="stop-color:#b86804;stop-opacity:1;"
+         offset="0"
+         id="stop18" />
+      <stop
+         style="stop-color:#ebebbf;stop-opacity:1;"
+         offset="1"
+         id="stop19" />
+    </linearGradient>
+    <style
+       id="style1">
+      .st0 {
+        fill: #fff;
+      }
+
+      .st0, .st1 {
+        stroke: #231f20;
+        stroke-miterlimit: 10;
+      }
+
+      .st2 {
+        font-family: RobotoSlab-Regular, 'Roboto Slab';
+      }
+
+      .st2, .st3, .st4 {
+        font-size: 12px;
+      }
+
+      .st3 {
+        font-family: AlternateGotNo1D, 'Alternate Gothic No1 D';
+      }
+
+      .st4 {
+        font-family: RobotoSlab-Bold, 'Roboto Slab';
+        font-weight: 700;
+      }
+    </style>
+    <linearGradient
+       xlink:href="#linearGradient16"
+       id="linearGradient17"
+       x1="55.763386"
+       y1="119.57126"
+       x2="72.316635"
+       y2="1.7887578"
+       gradientUnits="userSpaceOnUse" />
+    <radialGradient
+       xlink:href="#linearGradient19"
+       id="radialGradient21"
+       cx="10.26"
+       cy="28.51"
+       fx="10.26"
+       fy="28.51"
+       r="3.2"
+       gradientUnits="userSpaceOnUse" />
+    <radialGradient
+       xlink:href="#linearGradient19"
+       id="radialGradient23"
+       cx="117.73"
+       cy="28.559999"
+       fx="117.73"
+       fy="28.559999"
+       r="3.2"
+       gradientUnits="userSpaceOnUse" />
+    <radialGradient
+       xlink:href="#linearGradient19"
+       id="radialGradient24"
+       cx="117.73"
+       cy="92.800003"
+       fx="117.73"
+       fy="92.800003"
+       r="3.2"
+       gradientUnits="userSpaceOnUse" />
+    <radialGradient
+       xlink:href="#linearGradient19"
+       id="radialGradient25"
+       cx="10.26"
+       cy="92.739998"
+       fx="10.26"
+       fy="92.739998"
+       r="3.2"
+       gradientUnits="userSpaceOnUse" />
+    <filter
+       style="color-interpolation-filters:sRGB"
+       id="filter25"
+       x="-0.046955421"
+       y="-0.074554693"
+       width="1.0939108"
+       height="1.1491094">
+      <feGaussianBlur
+         stdDeviation="2.3074677"
+         id="feGaussianBlur25" />
+    </filter>
+  </defs>
+  <rect
+     class="st0"
+     x="5.07"
+     y="23.54"
+     width="117.94"
+     height="74.28"
+     rx="4.84"
+     ry="4.84"
+     id="rect1"
+     style="fill:url(#linearGradient17)" />
+  <circle
+     class="st0"
+     cx="10.26"
+     cy="28.51"
+     r="2.7"
+     id="circle1"
+     style="fill:url(#radialGradient21)" />
+  <circle
+     class="st0"
+     cx="10.26"
+     cy="92.74"
+     r="2.7"
+     id="circle2"
+     style="fill:url(#radialGradient25)" />
+  <circle
+     class="st0"
+     cx="117.73"
+     cy="28.56"
+     r="2.7"
+     id="circle3"
+     style="fill:url(#radialGradient23);fill-opacity:1" />
+  <circle
+     class="st0"
+     cx="117.73"
+     cy="92.8"
+     r="2.7"
+     id="circle4"
+     style="fill:url(#radialGradient24)" />
+  <text
+     class="st4"
+     id="text4"
+     style="font-weight:700;font-size:14.0692px;font-family:RobotoSlab-Bold, 'Roboto Slab';stroke-width:1.17244"
+     x="10.343202"
+     y="44.289223"><tspan
+       x="10.343202"
+       y="44.289223"
+       id="tspan4"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:14.0692px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:1.17244">OPEN KNOW-HOW</tspan></text>
+  <path
+     class="st1"
+     d="M10.37,48.77h107.36"
+     id="path4" />
+  <text
+     class="st3"
+     transform="translate(9.77 58.8)"
+     id="text5"
+     style="-inkscape-font-specification:'Cascadia Code, Normal';font-family:'Cascadia Code';font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:10.66666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+       x="0"
+       y="0"
+       id="tspan5"
+       style="-inkscape-font-specification:'Cascadia Code, Normal';font-family:'Cascadia Code';font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:10.66666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">MODEL:</tspan></text>
+  <path
+     class="st1"
+     d="M10.47,61.64h107.36"
+     id="path5" />
+  <path
+     class="st1"
+     d="M10.47,74.07h107.36"
+     id="path6" />
+  <path
+     class="st1"
+     d="M10.47,86.5h107.36"
+     id="path7" />
+  <text
+     class="st3"
+     transform="translate(9.77 72)"
+     id="text7"
+     style="-inkscape-font-specification:'Cascadia Code, Normal';font-family:'Cascadia Code';font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:10.66666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+       x="0"
+       y="0"
+       id="tspan7"
+       style="-inkscape-font-specification:'Cascadia Code, Normal';font-family:'Cascadia Code';font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:10.66666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">V:</tspan></text>
+  <text
+     class="st3"
+     id="text8"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.66666667px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"
+     x="71.104065"
+     y="58.799999"><tspan
+       x="71.104065"
+       y="58.799999"
+       id="tspan8"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.66666667px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GW:</tspan></text>
+  <text
+     class="st3"
+     id="text9"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.6667px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"
+     x="45.777046"
+     y="71.875832"><tspan
+       x="45.777046"
+       y="71.875832"
+       id="tspan9"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.6667px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">SERIAL NO:</tspan></text>
+  <text
+     class="st3"
+     transform="translate(10.25 84.46)"
+     id="text10"
+     style="-inkscape-font-specification:'Cascadia Code, Normal';font-family:'Cascadia Code';font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:10.66666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+       x="0"
+       y="0"
+       id="tspan10"
+       style="-inkscape-font-specification:'Cascadia Code, Normal';font-family:'Cascadia Code';font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:10.66666667px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">HZ:</tspan></text>
+  <text
+     class="st3"
+     id="text11"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.6667px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"
+     x="55.066746"
+     y="84.459999"><tspan
+       x="55.066746"
+       y="84.459999"
+       id="tspan11"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.6667px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">RPM:</tspan></text>
+  <text
+     class="st2"
+     id="text12"
+     x="46.56443"
+     y="58.78698"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Mono';-inkscape-font-specification:'Cascadia Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+       x="46.56443"
+       y="58.78698"
+       id="tspan12"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Mono';-inkscape-font-specification:'Cascadia Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">2.4</tspan></text>
+  <text
+     class="st2"
+     id="text13"
+     x="90.572189"
+     y="58.799999"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Mono';-inkscape-font-specification:'Cascadia Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+       x="90.572189"
+       y="58.799999"
+       id="tspan13"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Mono';-inkscape-font-specification:'Cascadia Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">1.21</tspan></text>
+  <text
+     class="st2"
+     id="text14"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Mono';-inkscape-font-specification:'Cascadia Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"
+     x="21.743902"
+     y="71.956566"><tspan
+       x="21.743902"
+       y="71.956566"
+       id="tspan14"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Mono';-inkscape-font-specification:'Cascadia Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">24</tspan></text>
+  <text
+     class="st2"
+     id="text15"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Mono';-inkscape-font-specification:'Cascadia Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"
+     x="27.719648"
+     y="84.446976"><tspan
+       x="27.719648"
+       y="84.446976"
+       id="tspan15"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Mono';-inkscape-font-specification:'Cascadia Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">Yes</tspan></text>
+  <text
+     class="st2"
+     id="text15-4"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Mono';-inkscape-font-specification:'Cascadia Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"
+     x="83.996063"
+     y="84.480316"><tspan
+       x="83.996063"
+       y="84.480316"
+       id="tspan15-8"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Mono';-inkscape-font-specification:'Cascadia Mono, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">apt</tspan></text>
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.6667px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;writing-mode:lr-tb;direction:ltr;fill:#000000;stroke-width:9"
+     x="108.29701"
+     y="72.248924"
+     id="text16"><tspan
+       id="tspan16"
+       x="108.29701"
+       y="72.248924">1</tspan></text>
+</svg>
