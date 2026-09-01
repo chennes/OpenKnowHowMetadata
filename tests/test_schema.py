@@ -1,18 +1,23 @@
 # SPDX-License-Identifier: CC0-1.0
 
 """
-Checks okh_schema.yaml against the upstream Open Know-How JSON Schema.
+Checks okh_schema.yaml, through the loader in okh/schema.py, against the upstream
+Open Know-How JSON Schema.
 
-Two kinds of check:
+Three kinds of check:
 
-  structural   the schema is internally consistent. Always runs.
-  drift        it still agrees with upstream. Needs okh.schema.json.
+  loader      malformed input is rejected. Always runs.
+  structural  the schema is internally consistent in ways the loader cannot see.
+              Always runs.
+  drift       it still agrees with upstream. Needs okh.schema.json.
 
-Upstream is fetched over the network and never vendored: it is
-AGPL-3.0-or-later and this addon is CC0.
+Note that these tests only test things that the loader itself cannot: much of the work in this addon
+is self-testing because it begins by doing a fully-validating load of the YAML file. If that file
+breaks or drifts, you'll get a runtime error.
 
 Run:
-    python tests/test_schema.py
+    pytest tests/           in the default environment
+    pixi run test-core      in an environment with no FreeCAD, on the 3.10 floor
 
 Environment:
     OKH_UPSTREAM_SCHEMA   path to a local okh.schema.json, skips the download
@@ -20,32 +25,22 @@ Environment:
                           fetched. Use this in CI.
 """
 
-import json
-import os
-import sys
-import urllib.error
-import urllib.request
-from pathlib import Path
+import pytest
 
-import yaml
-
-UPSTREAM_URL = (
-    "https://raw.githubusercontent.com/iop-alliance/OpenKnowHow/master/src/schema/okh.schema.json"
+from freecad.OpenKnowHowMetadata.okh import schema as okh_schema
+from freecad.OpenKnowHowMetadata.okh.schema import (
+    ConditionKind,
+    FieldType,
+    Obligation,
+    SchemaError,
 )
 
-SCHEMA_PATH = (
-    Path(__file__).resolve().parent.parent
-    / "freecad"
-    / "OpenKnowHowMetadata"
-    / "resources"
-    / "okh_schema.yaml"
-)
-
-# These four exist only inside the JSON Schema's conditional "allOf" rules, not
-# in its "properties", so they are expected to be present here and absent there.
+# These four exist only inside the JSON Schema's conditional "allOf" rules, not in
+# its "properties", so they are expected to be present here and absent there.
 CONDITIONAL_FIELDS = {"material", "printing-process", "component-sides", "2d-size-mm"}
 
-# Nested object definitions whose "required" arrays we mirror.
+# Nested object definitions whose "required" arrays we mirror, as our field key
+# against the name upstream gives the definition.
 NESTED_REQUIRED = {
     "part": "part",
     "software": "software",
@@ -54,191 +49,176 @@ NESTED_REQUIRED = {
     "rdf": "rdfNamespace",
 }
 
-failures = []
-skipped = []
+VOCABULARIES_WITH_UPSTREAM_EQUIVALENTS = [
+    "otrl",
+    "odrl",
+    "image_slots",
+    "image_tags",
+    "printing_process",
+]
 
 
-def check(condition, message, detail=""):
-    if not condition:
-        failures.append(message + (f"\n      {detail}" if detail else ""))
-
-
-def walk(fields, depth=0):
-    for field in fields:
-        yield depth, field
-        yield from walk(field.get("children", []), depth + 1)
-
-
-def load_schema():
-    with SCHEMA_PATH.open(encoding="utf-8") as handle:
-        return yaml.safe_load(handle)
-
-
-def load_upstream():
-    local = os.environ.get("OKH_UPSTREAM_SCHEMA")
-    if local:
-        with open(local, encoding="utf-8") as handle:
-            return json.load(handle)
-    try:
-        with urllib.request.urlopen(UPSTREAM_URL, timeout=30) as response:
-            return json.loads(response.read().decode("utf-8"))
-    except (urllib.error.URLError, TimeoutError, OSError) as error:
-        if os.environ.get("OKH_REQUIRE_UPSTREAM") == "1":
-            failures.append(f"could not fetch upstream schema: {error}")
-        else:
-            skipped.append(f"upstream unreachable ({error}); drift checks skipped")
-        return None
-
-
-def check_structure(schema):
-    """The schema must be internally consistent, whatever upstream says."""
-    vocabularies = set(schema["vocabularies"])
-    constraints = {entry["id"] for entry in schema["constraints"]}
-    referenced = set()
-    top_level = []
-
-    for depth, field in walk([f for g in schema["groups"] for f in g["fields"]]):
-        key = field.get("key", "<unnamed>")
-        for required_property in ("key", "type", "obligation", "label"):
-            check(required_property in field, f"field {key!r} has no {required_property!r}")
-        if depth == 0:
-            top_level.append(key)
-            check("tier" in field, f"top-level field {key!r} has no tier")
-            check("emit" in field, f"top-level field {key!r} has no emit")
-        # "agent" is polymorphic: it accepts a string or an object, so it
-        # carries children describing the object form. See "forms" in the schema.
-        if field.get("type") in ("object", "agent"):
-            check("children" in field, f"{field.get('type')} field {key!r} has no children")
-        else:
-            check("children" not in field, f"non-object field {key!r} has children")
-        if field.get("type") == "enum":
-            check("vocabulary" in field, f"enum field {key!r} names no vocabulary")
-        if "vocabulary" in field:
-            check(
-                field["vocabulary"] in vocabularies,
-                f"field {key!r} names unknown vocabulary {field['vocabulary']!r}",
-            )
-        if "constraint" in field:
-            referenced.add(field["constraint"])
-        condition = field.get("condition", "")
-        if isinstance(condition, str) and condition.startswith("constraint:"):
-            referenced.add(condition.split(":", 1)[1])
-
-    check(
-        len(top_level) == len(set(top_level)),
-        "duplicate top-level field keys",
-        sorted({k for k in top_level if top_level.count(k) > 1}),
-    )
-    check(
-        not (referenced - constraints),
-        "field refers to a constraint that is not defined",
-        sorted(referenced - constraints),
-    )
-    check(
-        not (constraints - referenced),
-        "constraint is defined but never referenced",
-        sorted(constraints - referenced),
-    )
-    return set(top_level)
-
-
-def check_drift(schema, upstream, our_fields):
-    """The schema must still agree with upstream on the facts."""
-    their_fields = {k for k in upstream["properties"] if k != "$schema"}
-    canonical = our_fields - CONDITIONAL_FIELDS
-
-    check(
-        not (their_fields - canonical),
-        "upstream has fields this schema does not define",
-        sorted(their_fields - canonical),
-    )
-    check(
-        not (canonical - their_fields),
-        "this schema defines fields upstream does not have",
-        sorted(canonical - their_fields),
-    )
-
-    ours_required = {
-        f["key"]
-        for group in schema["groups"]
-        for f in group["fields"]
-        if f["obligation"] == "required"
-    }
-    theirs_required = set(upstream["required"])
-    check(
-        ours_required == theirs_required,
-        "top-level required set disagrees with upstream",
-        f"ours={sorted(ours_required)} upstream={sorted(theirs_required)}",
-    )
-
-    by_key = {f["key"]: f for g in schema["groups"] for f in g["fields"]}
-    for field_key, definition_name in NESTED_REQUIRED.items():
-        theirs = set(upstream["$defs"][definition_name].get("required", []))
-        ours = {
-            child["key"]
-            for child in by_key[field_key]["children"]
-            if child["obligation"] == "required"
-        }
-        check(
-            ours == theirs,
-            f"nested required set for {field_key!r} disagrees with upstream",
-            f"ours={sorted(ours)} upstream={sorted(theirs)}",
-        )
-
-    image_props = upstream["$defs"]["imageObject"]["properties"]
-    expected = {
-        "otrl": [o["const"] for o in upstream["properties"]["technology-readiness-level"]["oneOf"]],
-        "odrl": [
+def upstream_vocabulary(upstream, name):
+    """The values upstream defines for one of our vocabularies."""
+    images = upstream["$defs"]["imageObject"]["properties"]
+    if name == "otrl":
+        return [o["const"] for o in upstream["properties"]["technology-readiness-level"]["oneOf"]]
+    if name == "odrl":
+        return [
             o["const"] for o in upstream["properties"]["documentation-readiness-level"]["oneOf"]
-        ],
-        "image_slots": image_props["slots"]["items"]["oneOf"][1]["enum"],
-        "image_tags": image_props["tags"]["items"]["oneOf"][1]["enum"],
-        "printing_process": upstream["allOf"][0]["then"]["properties"]["printing-process"]["enum"],
+        ]
+    if name == "image_slots":
+        return images["slots"]["items"]["oneOf"][1]["enum"]
+    if name == "image_tags":
+        return images["tags"]["items"]["oneOf"][1]["enum"]
+    if name == "printing_process":
+        return upstream["allOf"][0]["then"]["properties"]["printing-process"]["enum"]
+    raise AssertionError(f"no upstream equivalent known for {name!r}")
+
+
+# ---------------------------------------------------------------------------
+# loader
+# ---------------------------------------------------------------------------
+
+
+def test_the_shipped_schema_loads(schema):
+    assert schema.spec.okhv == "2.4"
+    assert schema.spec.filename == "okh.toml"
+
+
+def test_an_unreadable_path_is_not_a_schema_error():
+    """A missing file is a file problem, not a malformed schema."""
+    with pytest.raises(FileNotFoundError):
+        okh_schema.load("does-not-exist.yaml")
+
+
+def test_an_unexpected_schema_version_is_rejected(damaged_schema):
+    def bump(data):
+        data["schema_version"] = okh_schema.SCHEMA_VERSION + 1
+
+    with pytest.raises(SchemaError, match="schema_version"):
+        okh_schema.load(damaged_schema(bump))
+
+
+def test_an_unknown_vocabulary_reference_is_rejected(damaged_schema):
+    def misname(data):
+        for group in data["groups"]:
+            for field in group["fields"]:
+                if field["key"] == "tsdc":
+                    field["vocabulary"] = "tsdcc"
+
+    with pytest.raises(SchemaError, match="unknown vocabulary 'tsdcc'"):
+        okh_schema.load(damaged_schema(misname))
+
+
+def test_an_unknown_constraint_reference_is_rejected(damaged_schema):
+    def misname(data):
+        for group in data["groups"]:
+            for field in group["fields"]:
+                if field["key"] == "part":
+                    field["constraint"] = "no_such_constraint"
+
+    with pytest.raises(SchemaError, match="unknown constraint"):
+        okh_schema.load(damaged_schema(misname))
+
+
+def test_an_unknown_enum_value_is_rejected(damaged_schema):
+    def mistype(data):
+        data["groups"][0]["fields"][0]["emit"] = "sclar"
+
+    with pytest.raises(SchemaError, match="unknown emit 'sclar'"):
+        okh_schema.load(damaged_schema(mistype))
+
+
+def test_a_bare_string_where_a_list_belongs_is_rejected(damaged_schema):
+    """tuple() would otherwise shred a string into one character per element."""
+
+    def unwrap(data):
+        data["constraints"][0]["children"] = "source"
+
+    with pytest.raises(SchemaError, match="children must be a list"):
+        okh_schema.load(damaged_schema(unwrap))
+
+
+# ---------------------------------------------------------------------------
+# structural
+# ---------------------------------------------------------------------------
+
+
+def test_top_level_field_keys_are_unique(schema):
+    keys = [field.key for field in schema.top_level()]
+    assert sorted(keys) == sorted(set(keys))
+
+
+def test_field_paths_are_unique(schema):
+    """Shared YAML anchors must produce separate fields, not aliases of one."""
+    paths = [field.path for field in schema.walk()]
+    assert len(paths) == len(set(paths))
+
+
+def test_top_level_fields_have_a_tier(schema):
+    """tier drives how prominent a field is in the editor, so every one needs it."""
+    assert [field.key for field in schema.top_level() if field.tier is None] == []
+
+
+def test_only_object_and_agent_fields_have_children(schema):
+    """ "agent" is polymorphic: it accepts a string or an object, so it carries
+    children describing the object form. See "forms" in the schema."""
+    for field in schema.walk():
+        has_children = bool(field.children)
+        should = field.type in (FieldType.OBJECT, FieldType.AGENT)
+        assert has_children == should, f"{'.'.join(field.path)} ({field.type.name})"
+
+
+def test_enum_fields_name_a_vocabulary(schema):
+    for field in schema.walk():
+        if field.type is FieldType.ENUM:
+            assert field.vocabulary is not None, ".".join(field.path)
+
+
+def test_every_constraint_is_referenced(schema):
+    """A constraint nothing points at is dead weight, and probably a rename gone wrong."""
+    referenced = set()
+    for field in schema.walk():
+        if field.constraint is not None:
+            referenced.add(field.constraint.id)
+        if field.condition is not None and field.condition.kind is ConditionKind.CONSTRAINT:
+            referenced.add(field.condition.argument)
+    assert set(schema.constraints) == referenced
+
+
+# ---------------------------------------------------------------------------
+# drift
+# ---------------------------------------------------------------------------
+
+
+def test_field_set_matches_upstream(schema, upstream):
+    theirs = {key for key in upstream["properties"] if key != "$schema"}
+    ours = {field.key for field in schema.top_level()} - CONDITIONAL_FIELDS
+    assert ours == theirs
+
+
+def test_required_set_matches_upstream(schema, upstream):
+    ours = {field.key for field in schema.top_level() if field.obligation is Obligation.REQUIRED}
+    assert ours == set(upstream["required"])
+
+
+@pytest.mark.parametrize(("field_key", "definition"), sorted(NESTED_REQUIRED.items()))
+def test_nested_required_set_matches_upstream(schema, upstream, field_key, definition):
+    theirs = set(upstream["$defs"][definition].get("required", []))
+    ours = {
+        child.key
+        for child in schema.field(field_key).children
+        if child.obligation is Obligation.REQUIRED
     }
-    for name, theirs in expected.items():
-        ours = [entry["value"] for entry in schema["vocabularies"][name]["values"]]
-        check(
-            sorted(ours) == sorted(theirs),
-            f"vocabulary {name!r} disagrees with upstream",
-            f"only ours={sorted(set(ours) - set(theirs))} "
-            f"only upstream={sorted(set(theirs) - set(ours))}",
-        )
-
-    okhv = schema["spec"]["okhv"]
-    check(
-        okhv in upstream["properties"]["okhv"]["enum"],
-        f"spec.okhv {okhv!r} is not an okhv upstream recognizes",
-        f"upstream accepts {upstream['properties']['okhv']['enum']}",
-    )
+    assert ours == theirs
 
 
-def main():
-    schema = load_schema()
-    our_fields = check_structure(schema)
-
-    upstream = load_upstream()
-    if upstream is not None:
-        check_drift(schema, upstream, our_fields)
-
-    print(f"schema:      {SCHEMA_PATH}")
-    print(f"okhv:        {schema['spec']['okhv']}")
-    print(f"groups:      {len(schema['groups'])}")
-    print(
-        f"fields:      {len(our_fields)} top level, "
-        f"{len(our_fields - CONDITIONAL_FIELDS)} canonical"
-    )
-    print(f"vocabularies:{len(schema['vocabularies']):3d}")
-
-    for note in skipped:
-        print(f"\nSKIPPED: {note}")
-    if failures:
-        print(f"\n{len(failures)} FAILED:")
-        for failure in failures:
-            print(f"  - {failure}")
-        return 1
-    print("\nOK")
-    return 0
+@pytest.mark.parametrize("name", VOCABULARIES_WITH_UPSTREAM_EQUIVALENTS)
+def test_vocabulary_matches_upstream(schema, upstream, name):
+    ours = {entry.value for entry in schema.vocabularies[name].values}
+    assert ours == set(upstream_vocabulary(upstream, name))
 
 
-if __name__ == "__main__":
-    sys.exit(main())
+def test_okhv_is_one_upstream_recognizes(schema, upstream):
+    assert schema.spec.okhv in upstream["properties"]["okhv"]["enum"]

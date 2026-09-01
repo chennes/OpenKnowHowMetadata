@@ -10,7 +10,7 @@ version = "1.0.0"
 freecad-OpenKnowHowMetadata = { path = ".", editable = true }
 
 [tasks]
-test = "python tests/test_schema.py"
+test = "pytest tests/"
 
 [dependencies]
 freecad = ">=1.0.0,<2"
@@ -50,7 +50,7 @@ pytest = ">=8.0,<9"
 freecad-OpenKnowHowMetadata = { path = ".", editable = true }
 
 [feature.core.tasks]
-test-core = "python tests/test_schema.py"
+test-core = "pytest tests/"
 
 [environments]
 core = { features = ["core"], no-default-feature = true }
